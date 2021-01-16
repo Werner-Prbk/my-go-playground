@@ -39,6 +39,11 @@ func countTrees(theMap map2d, toRight int, toBottom int) int {
 
 func main() {
 	var theMap = loadMap("input.txt")
-	var treeCnt = countTrees(theMap, 3, 1)
-	fmt.Printf("Found trees %v\n", treeCnt)
+	var solution = countTrees(theMap, 1, 1)
+	solution *= countTrees(theMap, 3, 1)
+	solution *= countTrees(theMap, 5, 1)
+	solution *= countTrees(theMap, 7, 1)
+	solution *= countTrees(theMap, 1, 2)
+
+	fmt.Printf("The solution is %v\n", solution)
 }
