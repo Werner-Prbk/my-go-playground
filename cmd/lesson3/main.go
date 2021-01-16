@@ -9,7 +9,9 @@ import (
 const tree byte = '#'
 const square byte = '.'
 
-func loadMap(path string) []string {
+type map2d []string
+
+func loadMap(path string) map2d {
 	var data, err = ioutil.ReadFile(path)
 
 	if err != nil {
@@ -18,12 +20,12 @@ func loadMap(path string) []string {
 	return strings.Split(string(data), "\n")
 }
 
-func isTreeAtPos(theMap []string, x, y int) bool {
+func isTreeAtPos(theMap map2d, x, y int) bool {
 	x = x % len(theMap[0])
 	return theMap[y][x] == tree
 }
 
-func countTrees(theMap []string, toRight int, toBottom int) int {
+func countTrees(theMap map2d, toRight int, toBottom int) int {
 	var cnt = 0
 	var x = 0
 	for row := 0; row < len(theMap); row += toBottom {
