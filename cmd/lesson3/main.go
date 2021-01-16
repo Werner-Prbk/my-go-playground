@@ -9,26 +9,21 @@ import (
 const tree byte = '#'
 const square byte = '.'
 
-func loadMap(path string) [][]byte {
+func loadMap(path string) []string {
 	var data, err = ioutil.ReadFile(path)
 
 	if err != nil {
 		panic("This is unexpected")
 	}
-
-	var res [][]byte
-	for _, v := range strings.Split(string(data), "\n") {
-		res = append(res, []byte(v))
-	}
-	return res
+	return strings.Split(string(data), "\n")
 }
 
-func isTreeAtPos(theMap [][]byte, x, y int) bool {
+func isTreeAtPos(theMap []string, x, y int) bool {
 	x = x % len(theMap[0])
 	return theMap[y][x] == tree
 }
 
-func countTrees(theMap [][]byte, toRight int, toBottom int) int {
+func countTrees(theMap []string, toRight int, toBottom int) int {
 	var cnt = 0
 	var x = 0
 	for row := 0; row < len(theMap); row += toBottom {
@@ -43,6 +38,5 @@ func countTrees(theMap [][]byte, toRight int, toBottom int) int {
 func main() {
 	var theMap = loadMap("input.txt")
 	var treeCnt = countTrees(theMap, 3, 1)
-
 	fmt.Printf("Found trees %v\n", treeCnt)
 }
