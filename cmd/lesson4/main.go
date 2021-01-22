@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"strconv"
 	"strings"
 )
 
@@ -20,6 +21,8 @@ const (
 )
 
 type Passport map[PassportKey]string
+type PassportKeyValidator func(value string) bool
+type PassportValidator map[PassportKey]PassportKeyValidator
 
 func parsePassport(s string) (p Passport) {
 	p = make(Passport)
@@ -50,10 +53,13 @@ func readBatch(path string) (passports []Passport) {
 	return passports
 }
 
-func validatePassport(passport Passport, validator Passport) bool {
-	for k := range validator {
-		var _, ok = passport[k]
-		if !ok {
+func validatePassport(passport Passport, validator PassportValidator) bool {
+	for entry, validator := range validator {
+		var value, ok = passport[entry]
+
+		// passport must contain the entry and the
+		// the specific entry must be valid
+		if !ok || !validator(value) {
 			return false
 		}
 	}
@@ -64,14 +70,20 @@ func main() {
 	var passports = readBatch("batch.txt")
 	var validCnt = 0
 
-	var passportWithReqiredKeys = Passport{
-		BirthYear:      "",
-		ExpirationYear: "",
-		EyeColor:       "",
-		HairColor:      "",
-		Height:         "",
-		IssueYear:      "",
-		PassportId:     "",
+	var passportWithReqiredKeys = PassportValidator{
+		BirthYear: func(x string) bool {
+			return isIntegerWithinRange(x, 1920, 2002)
+		},
+		ExpirationYear: func(x string) bool {
+			return isIntegerWithinRange(x, 2020, 2030)
+		},
+		EyeColor:  isEyeColor,
+		HairColor: isHairColor,
+		Height:    isHeight,
+		IssueYear: func(x string) bool {
+			return isIntegerWithinRange(x, 2010, 2020)
+		},
+		PassportId: isPassportId,
 	}
 
 	for _, v := range passports {
@@ -81,4 +93,74 @@ func main() {
 	}
 
 	fmt.Printf("Number of valid passports is %v out of %v\n", validCnt, len(passports))
+}
+
+func isEyeColor(s string) bool {
+	if strings.Compare("amb", s) == 0 ||
+		strings.Compare("blu", s) == 0 ||
+		strings.Compare("brn", s) == 0 ||
+		strings.Compare("gry", s) == 0 ||
+		strings.Compare("grn", s) == 0 ||
+		strings.Compare("hzl", s) == 0 ||
+		strings.Compare("oth", s) == 0 {
+		return true
+	}
+	return false
+}
+
+func isIntegerWithinRange(s string, min, max int) bool {
+	var val, err = strconv.Atoi(s)
+	if err == nil && val >= min && val <= max {
+		return true
+	}
+	return false
+}
+
+func isHairColor(s string) bool {
+	if len(s) != 7 {
+		return false
+	}
+	if s[0] != '#' {
+		return false
+	}
+	for i := 1; i < len(s); i++ {
+		if !((s[i] >= '0' && s[i] <= '9') || (s[i] >= 'a' && s[i] <= 'f')) {
+			return false
+		}
+	}
+	return true
+}
+
+func isHeight(s string) bool {
+	var unit = s[len(s)-2:]
+	var valueStr = s[:len(s)-2]
+	var value, err = strconv.Atoi(valueStr)
+
+	if err != nil {
+		return false
+	}
+
+	if unit == "cm" {
+		if value >= 150 && value <= 193 {
+			return true
+		}
+	} else if unit == "in" {
+		if value >= 59 && value <= 76 {
+			return true
+		}
+	}
+	return false
+}
+
+func isPassportId(s string) bool {
+	if len(s) != 9 {
+		return false
+	}
+
+	for _, v := range s {
+		if !(byte(v) >= '0' && byte(v) <= '9') {
+			return false
+		}
+	}
+	return true
 }
