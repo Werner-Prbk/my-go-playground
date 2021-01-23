@@ -22,7 +22,7 @@ func loadAnswers(path string) [][]string {
 	return answers
 }
 
-func getYesCountOfGroup(answers []string) int {
+func getAnyYesCountOfGroup(answers []string) int {
 	var m = make(map[byte]bool)
 
 	for _, personAns := range answers {
@@ -34,14 +34,42 @@ func getYesCountOfGroup(answers []string) int {
 	return len(m)
 }
 
+func getAllYesCountOfGroup(answers []string) int {
+	var m = make(map[byte]int)
+
+	for _, personAns := range answers {
+		for _, v := range personAns {
+			var val, ok = m[byte(v)]
+			if ok {
+				m[byte(v)] = val + 1
+			} else {
+				m[byte(v)] = 1
+			}
+		}
+	}
+
+	var expectedYesCnt = len(answers)
+	var result = 0
+
+	for _, v := range m {
+		if v == expectedYesCnt {
+			result++
+		}
+	}
+	return result
+}
+
 func main() {
 	var answers = loadAnswers("answers.txt")
 
-	var totalCnt = 0
+	var totalAnyYesCnt = 0
+	var totalAllYesCnt = 0
 
 	for _, v := range answers {
-		totalCnt += getYesCountOfGroup(v)
+		totalAnyYesCnt += getAnyYesCountOfGroup(v)
+		totalAllYesCnt += getAllYesCountOfGroup(v)
 	}
 
-	fmt.Printf("Total sum of yes counts is %v\n", totalCnt)
+	fmt.Printf("Total sum of any yes counts is %v\n", totalAnyYesCnt)
+	fmt.Printf("Total sum of all yes counts is %v\n", totalAllYesCnt)
 }
