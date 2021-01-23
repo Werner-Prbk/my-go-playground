@@ -76,4 +76,14 @@ func main() {
 	}
 
 	fmt.Printf("The highest seat id is %v\n", max)
+
+	// find my seat
+	for i := 8; i < len(boardingPasses)-8; i++ {
+		var _, okPrev = boardingPasses[i-1]
+		var _, ok = boardingPasses[i]
+		var _, okNext = boardingPasses[i+1]
+		if !ok && okPrev && okNext {
+			fmt.Printf("My seat id is probably %v\n", i)
+		}
+	}
 }
