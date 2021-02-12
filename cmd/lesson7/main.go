@@ -57,6 +57,14 @@ func parseRule(rule string) bagColorRule {
 	return bc
 }
 
+func recoursiveCountBags(bcr bagColorRule, allBcr map[string]bagColorRule) int {
+	var res = 0
+	for k, v := range bcr.canContain {
+		res += v * (1 + recoursiveCountBags(allBcr[k], allBcr))
+	}
+	return res
+}
+
 func containsMyBag(bcr bagColorRule, allBcr map[string]bagColorRule, myBag string) bool {
 	if bcr.bagColor == myBag {
 		return true
@@ -95,4 +103,7 @@ func main() {
 	}
 
 	fmt.Printf("%v bags may contain my bag\n", cnt)
+
+	var sum = recoursiveCountBags(rules[MyBagColor], rules)
+	fmt.Printf("Sum is %v\n", sum)
 }
