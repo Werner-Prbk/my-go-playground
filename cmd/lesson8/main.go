@@ -55,7 +55,7 @@ func readBootCode(path string) []instruction {
 	return instr
 }
 
-func executeUntilLoop(pc int, program []instruction) int {
+func executeUntilLoopOrEnd(pc int, program []instruction) (int, bool) {
 	var marker []bool = make([]bool, len(program))
 	var accu = 0
 
@@ -64,7 +64,11 @@ func executeUntilLoop(pc int, program []instruction) int {
 
 		// loop detected
 		if marker[pc] == true {
-			return accu
+			return accu, false
+		}
+		// end detected
+		if pc == (len(program) - 1) {
+			return accu, true
 		}
 
 		marker[pc] = true
@@ -83,7 +87,30 @@ func executeUntilLoop(pc int, program []instruction) int {
 func main() {
 	var instr = readBootCode("input.txt")
 
-	var accu = executeUntilLoop(0, instr)
+	var accu, _ = executeUntilLoopOrEnd(0, instr)
 
 	fmt.Printf("Accu is: %v\n", accu)
+
+	// try to fix "bug" in instructions
+	for i := 0; i < len(instr); i++ {
+		var opAtPc = instr[i].op
+		if opAtPc == jmp {
+			instr[i].op = nop
+		} else if (opAtPc == nop) && (instr[i].arg != 0) {
+			instr[i].op = jmp
+		} else {
+			// nothing changed, dont waste time...
+			continue
+		}
+
+		var accu, endReached = executeUntilLoopOrEnd(0, instr)
+
+		if endReached {
+			fmt.Printf("Modified line %v from %v to %v. Accu: %v\n", i, opAtPc, instr[i].op, accu)
+			break
+		} else {
+			// undo modification
+			instr[i].op = opAtPc
+		}
+	}
 }
