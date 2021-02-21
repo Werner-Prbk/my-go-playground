@@ -78,14 +78,12 @@ func getAdjacentIndices(r int, c int, rowCnt int, colCnt int) []position {
 
 func applyChanges(sm [][]seat) bool {
 	var changed = false
-	for ri, row := range sm {
-		for ci := range row {
-			if sm[ri][ci].state != sm[ri][ci].nextState {
-				changed = true
-				sm[ri][ci].state = sm[ri][ci].nextState
-			}
+	iterateOverSeatMap(sm, func(s *seat) {
+		if s.state != s.nextState {
+			changed = true
+			s.state = s.nextState
 		}
-	}
+	})
 	return changed
 }
 
@@ -100,23 +98,30 @@ func countSeatsWithState(sm [][]seat, toCheck []position, state byte) (cnt int) 
 
 func simulateUntilStable(sm [][]seat) (iterations int) {
 	for {
-		for ri, row := range sm {
-			for ci := range row {
-				if sm[ri][ci].state == seatEmpty {
-					if countSeatsWithState(sm, sm[ri][ci].adjacentIndices, seatOccupied) == 0 {
-						sm[ri][ci].nextState = seatOccupied
-					}
-				} else if sm[ri][ci].state == seatOccupied {
-					if countSeatsWithState(sm, sm[ri][ci].adjacentIndices, seatOccupied) >= 4 {
-						sm[ri][ci].nextState = seatEmpty
-					}
+		iterateOverSeatMap(sm, func(s *seat) {
+			if s.state == seatEmpty {
+				if countSeatsWithState(sm, s.adjacentIndices, seatOccupied) == 0 {
+					s.nextState = seatOccupied
+				}
+			} else if s.state == seatOccupied {
+				if countSeatsWithState(sm, s.adjacentIndices, seatOccupied) >= 4 {
+					s.nextState = seatEmpty
 				}
 			}
-		}
+		})
+
 		if applyChanges(sm) == false {
 			return iterations
 		}
 		iterations++
+	}
+}
+
+func iterateOverSeatMap(sm [][]seat, f func(s *seat)) {
+	for ri, row := range sm {
+		for ci := range row {
+			f(&sm[ri][ci])
+		}
 	}
 }
 
@@ -133,13 +138,11 @@ func main() {
 
 	var occupiedSeats = 0
 
-	for _, row := range sm {
-		for _, elem := range row {
-			if elem.state == seatOccupied {
-				occupiedSeats++
-			}
+	iterateOverSeatMap(sm, func(s *seat) {
+		if s.state == seatOccupied {
+			occupiedSeats++
 		}
-	}
+	})
 
 	fmt.Printf("After %v iterations it got stable with %v occupied seats\n", iterations, occupiedSeats)
 }
